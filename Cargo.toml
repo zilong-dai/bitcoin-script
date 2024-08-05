@@ -1,0 +1,12 @@
+[package]
+name = "helloworld"
+version = "0.0.1"
+authors = ["runner"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bitcoin = "0.32.0"
+hex = "0.4"
+# bp-consensus = "=0.10.11"

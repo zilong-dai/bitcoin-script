@@ -2,7 +2,7 @@
 
 A simple test of bitcoin script. 
 
-## Unlock script(output script)
+## Output script
 
 ### P2PKH
 
@@ -58,7 +58,7 @@ Check: todo!()
 
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L293](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L293)
 
-## Lock script(input script)
+## Input script
 
 todo!()
 

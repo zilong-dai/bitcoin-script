@@ -58,6 +58,16 @@ Check: todo!()
 
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L293](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L293)
 
+### OP_RETURN
+
+ASM: OP_RETURN `<data>`
+
+The OP_RETURN standard locking script just contains the OP_RETURN opcode followed by a data push of up to 80 bytes. This data push can contain any data you like, but it's commonly used for storing ASCII-encoded text strings. 
+
+**This locking script cannot be unlocked, so don't use it to lock up any amount of bitcoins.**
+
+Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L304](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L304)
+
 ## Input script
 
 ### P2PKH 

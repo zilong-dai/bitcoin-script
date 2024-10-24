@@ -2,11 +2,13 @@
 
 A simple test of bitcoin script. 
 
-## Output script
+## Scripts
 
 ### P2PKH
 
-ASM: OP_DUP OP_HASH160 OP_PUSHBYTES_20 `<PK_Hash>` OP_EQUALVERIFY OP_CHECKSIG
+Lock script: OP_DUP OP_HASH160 OP_PUSHBYTES_20 `<PK_Hash>` OP_EQUALVERIFY OP_CHECKSIG
+
+Unlock script: OP_PUSHBYTES_71 `<Signature>` OP_PUSHBYTES_33 `<PK>`
 
 Check:
 * OP_HASH160(PK) = PK_Hash
@@ -17,10 +19,14 @@ Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L190](https://github
 
 ### P2SH
 
-ASM: OP_HASH160 OP_PUSHBYTES_20 `<Script_Hash>` OP_EQUAL
+Lock script: OP_HASH160 OP_PUSHBYTES_20 `<Script_Hash>` OP_EQUAL
+
+Unlock script: OP_PUSHBYTES_* DATA1 OP_PUSHBYTES_* DATA2 ... OP_PUSHBYTES_* DATAn
+
+DATAn is the redeem script. 
 
 Check:
-* OP_HASH160(redeem_script_bytes) = Script_Hash
+* OP_HASH160(DATAn) = Script_Hash
 * execute redeem script
 
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L181](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L181)
@@ -29,9 +35,11 @@ Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L181](https://github
 
 The signature (witness) part is separated from the input part of the transaction, thereby improving the efficiency and scalability of the transaction. The locking script only contains the public key hash, while the unlocking script (witness) contains the signature and the public key.
 
-Witness: signature + public key
+Lock script: OP_0 OP_PUSHBYTES_20 `<PK_Hash>`
 
-ASM: OP_0 OP_PUSHBYTES_20 `<PK_Hash>`
+Unlock script: None
+
+Witness: 0x02 0x48 Signature 0x21 PK
 
 Check: same as P2PKH
 
@@ -39,9 +47,13 @@ Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L285](https://github
 
 ### P2WSH
 
-Witness: redeem script
+Lock script: OP_0 OP_PUSHBYTES_32 `<Script_Hash>`
 
-ASM: OP_0 OP_PUSHBYTES_32 `<Script_Hash>`
+Unlock script: None
+
+Witness: stackitems(VarInt) stackitem1_size stackitem1 stackitem2_size stackitem2 ... stackitemn_size stackitemn
+
+The stackitemn is the redeem script. Data1..n push into stack. 
 
 Check: same as P2SH
 
@@ -52,9 +64,27 @@ Ref:
 
 ### P2TR
 
-ASM: OP_1 OP_PUSHBYTES_32 `<Taproot_PK>`
+Lock script: OP_1 OP_PUSHBYTES_32 `<Taproot_PK>`
 
-Check: todo!()
+Unlock script: None
+
+#### Key path spending
+
+witness: signature
+
+* CheckSchnorrSignature(signature, Taproot_PK, hash(Lock Script) => sighash) == 1
+
+##### Script path spending 
+
+witness: stackitems(VarInt) stackitem1_size stackitem1 stackitem2_size stackitem2... stackitemn_size stackitemn
+
+stackitemn is control(internal_key, merkle_path), stackitemn-1 is script.
+
+1. ComputeTapleafHash(script) => tapleaf_hash
+2. ComputeTaprootMerkleRoot(control.merkle_path, tapleaf_hash) => merkle_root
+3. ComputeTapTweakHash(&merkle_root) => merkle_root_hash
+4. ComputeTapTweak(merkle_root_hash, control.internal_key) => control.internal_key + merkle_root_hash * G == control.Taproot_PK
+5. execute script
 
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L293](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L293)
 
@@ -68,26 +98,24 @@ The OP_RETURN standard locking script just contains the OP_RETURN opcode followe
 
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L304](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L304)
 
-## Input script
-
-### P2PKH 
-
-ASM: OP_PUSHBYTES_71  `<sig>` OP_PUSHBYTES_20 `<PK>` 
-
-### P2SH
-
-The Redeem Script is a data push of the hex-encoding of a **custom locking script**. This is the last item inside the ScriptSig of a P2SH. **Datan is the redeem script**.
-
-ASM: OP_PUSHDATA <data1> OP_PUSHDATA <data2> ... OP_PUSHDATA <datan>
 
 
-### P2WPKH & P2SH
+## Utils 
 
-Input is empty.
+sha256 online: https://www.lzltool.com/data-sha256
 
-Witness: witness_hex = stackitems(= N) size0 item0  size1 item1 ... sizeN itemN
+ripemd160 online: http://web.chacuo.net/charsetripemd160
 
-example: [tx: 2c3ce072e32f49644a40a3d92d979e7fdd7d3f38f49db3f08e55e5e2f17e409a](https://www.blockchain.com/explorer/transactions/btc/2c3ce072e32f49644a40a3d92d979e7fdd7d3f38f49db3f08e55e5e2f17e409a)
+
+## Ref
+
+### OP_HASH160
+
+res = ripemd160(sha256(data))
+
+### Witness
+
+[example tx: 2c3ce072e32f49644a40a3d92d979e7fdd7d3f38f49db3f08e55e5e2f17e409a](https://www.blockchain.com/explorer/transactions/btc/2c3ce072e32f49644a40a3d92d979e7fdd7d3f38f49db3f08e55e5e2f17e409a)
 
 witness: 
 ```
@@ -118,15 +146,8 @@ hex: 52210209f1f641a9871acea5698cd38401aabd77a6f6bf1804f57d04b379cba9235fff21024
 ASM: OP_PUSHNUM_2 OP_PUSHBYTES_33 0209f1f641a9871acea5698cd38401aabd77a6f6bf1804f57d04b379cba9235fff OP_PUSHBYTES_33 0243333533dd38308b7660b7c89694dc606af241d364c6dd4161bf9a877ccc2078 OP_PUSHBYTES_33 029f55600c0f8f87c1bec37a0310e0ae8558e4217475afd7e3db12e6ad35284ca1 OP_PUSHNUM_3 OP_CHECKMULTISIG
 ```
 
-## Utils 
+### P2TR example
 
-sha256 online: https://www.lzltool.com/data-sha256
+[example tx: 905ecdf95a84804b192f4dc221cfed4d77959b81ed66013a7e41a6e61e7ed530](https://blockstream.info/tx/905ecdf95a84804b192f4dc221cfed4d77959b81ed66013a7e41a6e61e7ed530)
 
-ripemd160 online: http://web.chacuo.net/charsetripemd160
-
-
-## Ref
-
-### OP_HASH160
-
-res = ripemd160(sha256(data))
+How to check p2tr script? See in [main.rs](./src/main.rs).

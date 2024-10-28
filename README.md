@@ -99,6 +99,77 @@ The OP_RETURN standard locking script just contains the OP_RETURN opcode followe
 Ref: [rust-bitcoin/bitcoin/src/blockdata/script/borrowed.rs#L304](https://github.com/rust-bitcoin/rust-bitcoin/blob/5cca2f271d04141e1ec7d28cc07add8f2bc9b404/bitcoin/src/blockdata/script/borrowed.rs#L304)
 
 
+## SigHash
+
+### SIGHASH_ALL
+
+SIGHASH_ALL, given a transaction Tx, the signature applies to all of Tx’s inputs and all its outputs (see green bounding boxes). SIGHASH_ALL is applied by
+
+1. Creating a copy of the transaction
+2. Empty script_sigs for each input and replace with the script_pubkey they reference. This is done because the "signature is part of the script_sig and … can’t sign itself"
+3. Make sure that no other fields are set to empty before the transaction is serialized (Tx_ser)
+4. The flag 0x01 is added to the end of the serialized transaction and passed through a hashing function
+5. This message is then signed by the signing algorithm to generate the signature
+
+<center>
+  <img src="./static/SIGHASH_ALL.png" width="80%">
+</center>
+<!-- ![SIGHASH_ALL](./static/SIGHASH_ALL.png) -->
+
+### SIGHASH_NONE
+
+SIGHASH_NONE, the signature applies to all of Tx’s inputs (see green bounding box) but to none of the outputs. The application process is as stated below:
+
+1. Create a copy of the transaction
+2. Empty each script_sig for all inputs and replace with the script_pubkey they reference
+3. Empty out all output fields
+4. Serialize the transaction
+5. Append 0x02 to Tx_ser, hash, and then sign
+
+<center>
+  <img src="./static/SIGHASH_NONE.png" width="80%">
+</center>
+<!-- ![SIGHASH_NONE](./static/SIGHASH_NONE.png) -->
+
+### SIGHASH_SINGLE
+
+SIGHASH_SINGLE, all the inputs of the given transaction Tx are signed and one output that has the same index of one of the inputs being signed. This is essentially "authorizing all other inputs to go with a specific output".
+
+1. Create a copy of the transaction
+2. Empty script_sigs for each input and replace with the script_pubkey they reference
+3. Empty out all output fields bar the specific output
+4. Serialize the transaction
+5. Append 0x03 to Tx_ser, hash, and then sign
+
+<center>
+  <img src="./static/SIGHASH_SINGLE.png" width="80%">
+</center>
+<!-- ![SIGHASH_SINGLE](./static/SIGHASH_SINGLE.png) -->
+
+
+### SIGHASH_ANYONECANPAY
+With ANYONECANPAY set for ALL, changes can be made to all inputs except the select input (index 0) and the outputs (see image below).
+
+<center>
+  <img src="./static/SIGHASH_ALL_ANYONECANPAY.png" width="80%">
+</center>
+<!-- ![SIGHASH_ALL_ANYONECANPAY](./static/SIGHASH_ALL_ANYONECANPAY.png) -->
+
+ANYONECANPAY set for NONE means that changes can be made to all outputs, and inputs except the current input.
+
+<center>
+  <img src="./static/SIGHASH_NONE_ANYONECANPAY.png" width="80%">
+</center>
+<!-- ![SIGHASH_NONE_ANYONECANPAY](./static/SIGHASH_NONE_ANYONECANPAY.png) -->
+
+ANYONECANPAY set for SINGLE means that changes can be made to all outputs except the output with a matching index with the current input. All other inputs can be modified, added, and/or removed.
+
+<center>
+  <img src="./static/SIGHASH_SINGLE_ANYONECANPAY.png" width="80%">
+</center>
+<!-- ![SIGHASH_SINGLE_ANYONECANPAY](./static/SIGHASH_SINGLE_ANYONECANPAY.png) -->
+
+Ref: [Signature Hash Flags](https://www.btcstudy.org/2022/04/26/signature-hash-flags-by-ochekiye/)
 
 ## Utils 
 
@@ -151,3 +222,9 @@ ASM: OP_PUSHNUM_2 OP_PUSHBYTES_33 0209f1f641a9871acea5698cd38401aabd77a6f6bf1804
 [example tx: 905ecdf95a84804b192f4dc221cfed4d77959b81ed66013a7e41a6e61e7ed530](https://blockstream.info/tx/905ecdf95a84804b192f4dc221cfed4d77959b81ed66013a7e41a6e61e7ed530)
 
 How to check p2tr script? See in [main.rs](./src/main.rs).
+
+### SIGHASH example
+
+[example tx: 6adf27a500eb592d49a1732ab338e38815f6d4986636566755a68b1147c57d18](https://www.blockchain.com/explorer/transactions/btc/6adf27a500eb592d49a1732ab338e38815f6d4986636566755a68b1147c57d18)
+
+How to calculate sighash of transaction? See in [main.rs](./src/main.rs).

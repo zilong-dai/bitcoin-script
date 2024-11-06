@@ -171,6 +171,12 @@ ANYONECANPAY set for SINGLE means that changes can be made to all outputs except
 
 Ref: [Signature Hash Flags](https://www.btcstudy.org/2022/04/26/signature-hash-flags-by-ochekiye/)
 
+## Ordinals Inscriptions
+
+Ordinals are a numbering scheme for satoshis that allows tracking and transferring individual sats. These numbers are called ordinal numbers. Satoshis are numbered in the order in which they're mined, and transferred from transaction inputs to transaction outputs first-in-first-out. Both the numbering scheme and the transfer scheme rely on order, the numbering scheme on the order in which satoshis are mined, and the transfer scheme on the order of transaction inputs and outputs. Thus the name, ordinals.
+
+Ref: [Ordinals](./static/Ordinals.md)
+
 ## Utils 
 
 sha256 online: https://www.lzltool.com/data-sha256
@@ -178,6 +184,10 @@ sha256 online: https://www.lzltool.com/data-sha256
 ripemd160 online: http://web.chacuo.net/charsetripemd160
 
 filter transactions: [how-can-i-find-samples-for-p2tr-transactions-on-mainnet](https://bitcoin.stackexchange.com/questions/110995/how-can-i-find-samples-for-p2tr-transactions-on-mainnet)
+
+hex2ascii: https://www.bejson.com/convert/ox2str/
+
+hex2image: https://www.lzltool.com/hextoimage
 
 ## Ref
 
